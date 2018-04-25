@@ -22,5 +22,16 @@ This is a URL Shortener service.
 - DB-based unit test is failing
 
 ## Future Enhancements
-- Caching
 - UI
+- Caching
+- Support for MySQL read replicas
+- DB sharding
+- Author tracking
+- Custom URLs
+- URL expiry
+
+## Philosophy
+
+This URL shortener is making a lot of assumptions:
+- The rate of requests for creating short URLs does not overwhelm the DB server
+- There is no need to provide geographical diversity (otherwise a single MySQL DB instance or master-master replication would not be enough)
