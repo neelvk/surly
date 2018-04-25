@@ -3,17 +3,24 @@ package controllers
 import java.sql.{Connection, Statement}
 
 import com.terway.base.ShortenRequest
+import im.duk.base62.Base62
 import javax.inject.Inject
+import play.api.Configuration
 import play.api.db._
 import play.api.mvc._
 
-class URLController @Inject()(db: Database, cc: ControllerComponents) extends AbstractController(cc) {
+class URLController @Inject()(config:Configuration, db: Database, cc: ControllerComponents) extends AbstractController(cc) {
 
-  def get(id: Long) = Action { implicit request: Request[AnyContent] =>
+  private val baseURL = config.get[String]("base.url")
+
+  val base62 = new Base62()
+
+  def get(id: String) = Action { implicit request: Request[AnyContent] =>
+    val idNum = base62.decodeBase62(id)
     db.withConnection {
       conn =>
         val stmt = conn.prepareStatement("SELECT target FROM urls WHERE id = ?")
-        stmt.setLong(1, id)
+        stmt.setLong(1, idNum)
         val rs = stmt.executeQuery()
         if (rs.next()) {
           val target = rs.getString("target")
@@ -37,7 +44,8 @@ class URLController @Inject()(db: Database, cc: ControllerComponents) extends Ab
             query.setString(1, sr.target)
             val rs = query.executeQuery()
             if (rs.next) {
-              Ok(rs.getLong("id").toString)
+              val id = rs.getLong("id")
+              Ok(s"$baseURL${base62.encodeBase10(id)}")
             } else {
               createEntry(sr)(conn)
             }
@@ -57,7 +65,7 @@ class URLController @Inject()(db: Database, cc: ControllerComponents) extends Ab
       val genKeys = stmt.getGeneratedKeys
       if(genKeys.next()) {
         val id = genKeys.getLong(1)
-        Ok(id.toString)
+        Ok(s"$baseURL${base62.encodeBase10(id)}")
       } else {
         InternalServerError
       }
