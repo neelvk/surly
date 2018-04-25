@@ -5,6 +5,9 @@
 
 GET     /w/ping                     controllers.PingController.ping
 
+POST    /v1/shorten                 controllers.URLController.create
+
+GET     /:id                        controllers.URLController.get(id:Long)
 # An example controller showing a sample home page
 GET     /                           controllers.HomeController.index
 
